@@ -10,9 +10,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="${WORKSPACE_DIR:-${DISTROBOX_HOST_HOME:-/home/$(id -un)}/Workspace}"
 
 # Load optional local overrides from .env if present
-if [ -f "$WORKSPACE_DIR/distrobox_configs/.env" ]; then
+if [ -f "$WORKSPACE_DIR/distrobox-configs/.env" ]; then
     # shellcheck source=/dev/null
-    source "$WORKSPACE_DIR/distrobox_configs/.env"
+    source "$WORKSPACE_DIR/distrobox-configs/.env"
 elif [ -f "$HOME/.env" ]; then
     # shellcheck source=/dev/null
     source "$HOME/.env"

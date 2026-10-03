@@ -26,7 +26,7 @@ Isolated Distrobox container designed for modern, high-performance **Frontend & 
 
 ### 3. Provision tools (ONCE only, INSIDE the container)
 ```bash
-bash $HOME/Workspace/distrobox_configs/node-dev/setup.sh
+bash $HOME/Workspace/distrobox-configs/node-dev/setup.sh
 ```
 
 ---

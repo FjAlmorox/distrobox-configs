@@ -26,7 +26,7 @@ Isolated Distrobox container for modern development in the JVM ecosystem: **Java
 
 ### 3. Provision tools (ONCE only, INSIDE the container)
 ```bash
-bash $HOME/Workspace/distrobox_configs/java-dev/setup.sh
+bash $HOME/Workspace/distrobox-configs/java-dev/setup.sh
 ```
 
 ---

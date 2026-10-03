@@ -33,7 +33,7 @@ check_uv() {
     if ! command -v uv >/dev/null 2>&1; then
         echo "❌ Error: 'uv' not found in PATH or ~/.local/bin."
         echo "   Please run setup.sh inside the container first:"
-        echo "     bash ~/Workspace/distrobox_configs/python-dev/setup.sh"
+        echo "     bash ~/Workspace/distrobox-configs/python-dev/setup.sh"
         exit 1
     fi
 }

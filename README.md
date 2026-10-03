@@ -1,6 +1,6 @@
 # 📦 Distrobox Configs - Isolated Development Environments
 
-[![CI & Security Audit](https://github.com/FjAlmorox/distrobox_configs/actions/workflows/ci.yml/badge.svg)](https://github.com/FjAlmorox/distrobox_configs/actions/workflows/ci.yml)
+[![CI & Security Audit](https://github.com/FjAlmorox/distrobox-configs/actions/workflows/ci.yml/badge.svg)](https://github.com/FjAlmorox/distrobox-configs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 Central repository to manage development environments and containers on **Fedora** using **Distrobox** and **Podman**.
@@ -29,7 +29,7 @@ Each environment configured in this repository adheres to the following directiv
 ## 📁 Repository Structure
 
 ```text
-distrobox_configs/
+distrobox-configs/
 ├── .agents/                    # Modular skills and AI agent knowledge base
 │   └── skills/                 # Portable, task-specific runbooks (agentskills.io)
 ├── .editorconfig               # Indentation, UTF-8, and LF normalization across editors

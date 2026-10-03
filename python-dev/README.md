@@ -26,7 +26,7 @@ Isolated Distrobox container for modern, high-performance Python development pow
 
 ### 3. Provision tools (ONCE only, INSIDE the container)
 ```bash
-bash $HOME/Workspace/distrobox_configs/python-dev/setup.sh
+bash $HOME/Workspace/distrobox-configs/python-dev/setup.sh
 ```
 
 ---

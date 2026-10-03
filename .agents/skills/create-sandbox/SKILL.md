@@ -80,7 +80,7 @@ Generate the modular subfolder structure:
 
 #### 1. `setup.sh` Requirements
 * **Container check**: Verify execution inside container (`/run/host/container-manager` or `CONTAINER_ID`).
-* **Local `.env` loading**: Check for and source `$WORKSPACE_DIR/distrobox_configs/.env` if present.
+* **Local `.env` loading**: Check for and source `$WORKSPACE_DIR/distrobox-configs/.env` if present.
 * **Package installation**: Use `sudo dnf install -y --skip-unavailable ...` (fallback to `apt-get` if Debian/Ubuntu).
 * **Conditional GUI / Emulator Pattern (Unified Standard)**:
   If the environment supports desktop interfaces (JavaFX, Qt, GTK), emulators, or multimedia:
@@ -135,7 +135,7 @@ Create the sandbox on the host:
 #### 3. Internal Container Provisioning
 Execute the unattended setup script inside the running container:
 ```bash
-distrobox enter <name> -- bash $WORKSPACE_DIR/distrobox_configs/<name>/setup.sh
+distrobox enter <name> -- bash $WORKSPACE_DIR/distrobox-configs/<name>/setup.sh
 ```
 
 #### 4. Live Runtime Smoke Tests

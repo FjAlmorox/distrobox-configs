@@ -26,7 +26,7 @@ Isolated Distrobox container for Android development with hardware emulation, An
 
 ### 3. Provision tools (ONCE only, INSIDE the container)
 ```bash
-bash $HOME/Workspace/distrobox_configs/android-dev/setup.sh
+bash $HOME/Workspace/distrobox-configs/android-dev/setup.sh
 ```
 
 ---
