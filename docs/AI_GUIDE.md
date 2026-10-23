@@ -11,7 +11,7 @@ The development environment is deployed on **Fedora Linux**, using centralized s
 ```text
                                 HOST SYSTEM (Fedora Linux)
                   ┌────────────────────────────────────────────────────────┐
-                  │ • Podman 5.8+ • Distrobox 1.8+                         │
+                  │ • Podman (or Docker) • Distrobox                       │
                   │ • Shared workspace: ~/Workspace                        │
                   │ • Shared network namespace: loopback (localhost)       │
                   └───────────────┬────────────────────────┬───────────────┘
@@ -24,7 +24,7 @@ The development environment is deployed on **Fedora Linux**, using centralized s
 ├──────────────────┤             ├──────────────────┤             ├──────────────────┤
 │ • fnm + Node 24  │             │ • uv + Py 3.13   │             │ • SDKMAN!        │
 │ • pnpm / bun     │             │ • ruff, mypy     │             │ • Java 21, Gradle│
-│ • React, Vite    │             │ • C/C++ Headers  │             │ • GraalVM, GUI   │
+│ • React, Vite    │             │ • C/C++ Headers  │             │ • GUI, Temurin   │
 │ 📁 Isolated Home:│             │ 📁 Isolated Home:│             │ 📁 Isolated Home:│
 │   .../node-dev   │             │   .../python-dev │             │   .../java-dev   │
 └────────┬─────────┘             └────────┬─────────┘             └────────┬─────────┘
@@ -57,8 +57,8 @@ The development environment is deployed on **Fedora Linux**, using centralized s
 | Container | Base Image | Toolchains & Runtimes | Primary Use Cases |
 | :--- | :--- | :--- | :--- |
 | **`node-dev`** | `fedora-toolbox` | • `fnm` (Fast Node Manager)<br>• Node.js 24 Active LTS (default)<br>• `pnpm`, `npm`, `yarn`, `bun`<br>• Native headers (`node-gyp`)<br>• Headless browser deps (Vitest, Playwright) | • Frontend SPA/SSR (React, Vite, Next.js)<br>• Web tools, TypeScript/JavaScript scripts |
-| **`python-dev`** | `fedora-toolbox` | • Astral `uv` (package & venv manager)<br>• Python 3.13 (default), 3.14<br>• `ruff`, `mypy`, `pytest`, `pre-commit`<br>• C/C++ toolchain (`gcc`, `openssl-devel`, etc.) | • Backend services (FastAPI, Django)<br>• AI pipelines & agent runtimes (LangGraph, PyTorch)<br>• Automation & data science |
-| **`java-dev`** | `fedora-toolbox` | • SDKMAN!<br>• Eclipse Temurin OpenJDK 21 LTS<br>• Gradle, Apache Maven, Kotlin<br>• GraalVM Native Image toolchain<br>• GUI support (X11, GTK3, Mesa) | • JVM backend services (Spring Boot, Quarkus)<br>• Desktop apps (Compose Desktop, JavaFX)<br>• Native binary compilation |
+| **`python-dev`** | `fedora-toolbox` | • Astral `uv` (package & venv manager)<br>• Python 3.13 default (others installable on-demand via `change_version`)<br>• `ruff`, `mypy`, `pytest`, `pre-commit`<br>• C/C++ toolchain (`gcc`, `openssl-devel`, etc.) | • Backend services (FastAPI, Django)<br>• AI pipelines & agent runtimes (LangGraph, PyTorch)<br>• Automation & data science |
+| **`java-dev`** | `fedora-toolbox` | • SDKMAN!<br>• Eclipse Temurin OpenJDK 21 LTS (default)<br>• Gradle, Apache Maven, Kotlin<br>• GraalVM Native Image build deps preinstalled (GraalVM CE opt-in via `change_version -g`)<br>• GUI support (X11, GTK3, Mesa) | • JVM backend services (Spring Boot, Quarkus)<br>• Desktop apps (Compose Desktop, JavaFX)<br>• Native binary compilation |
 | **`android-dev`** | `fedora-toolbox` | • OpenJDK 21<br>• Android SDK Command-line Tools (`sdkmanager`, `adb`)<br>• Platform 35 & build-tools<br>• x86_64 emulator with KVM acceleration | • Android mobile application development<br>• Mobile emulator testing<br>• APK & AAB packaging |
 
 ---

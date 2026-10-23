@@ -49,7 +49,7 @@ if [ ! -f /run/host/container-manager ] && [ -z "$CONTAINER_ID" ] && [ ! -f /.do
     fi
 fi
 
-# 2. Install system packages (utilities, GraalVM toolchain, and optional GUI/fonts)
+# 2. Install system packages (utilities, native-image build deps, and optional GUI/fonts)
 echo ""
 echo "📦 [1/6] Installing system dependencies (Base toolchain)..."
 BASE_PACKAGES_FEDORA="curl wget zip unzip tar sed git which file jq findutils pciutils procps-ng gcc gcc-c++ glibc-devel zlib-devel libstdc++-devel"

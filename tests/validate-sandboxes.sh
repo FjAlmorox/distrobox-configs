@@ -207,9 +207,9 @@ if [ $ERRORS_FOUND -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------
-# 5. Static Linting with ShellCheck
+# 4. Static Linting with ShellCheck
 # ---------------------------------------------------------
-echo -e "\n${BLUE}5. Static script analysis (ShellCheck)...${NC}"
+echo -e "\n${BLUE}4. Static script analysis (ShellCheck)...${NC}"
 if command -v shellcheck &>/dev/null; then
     info "Found ShellCheck. Running static analysis on ${#ALL_SCRIPTS[@]} scripts..."
     for script in "${ALL_SCRIPTS[@]}"; do
@@ -230,7 +230,7 @@ else
 fi
 
 # ---------------------------------------------------------
-# 6. Final Summary & Exit
+# 5. Final Summary & Exit
 # ---------------------------------------------------------
 echo -e "\n${BLUE}======================================================${NC}"
 if [ $ERRORS_FOUND -ne 0 ]; then

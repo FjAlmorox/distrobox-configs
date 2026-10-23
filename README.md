@@ -61,7 +61,7 @@ distrobox-configs/
 ├── java-dev/                   # [Environment] Java / Kotlin / JVM Development
 │   ├── setup.sh                # Internal bootstrap (run once inside sandbox)
 │   ├── bin/                    # CLI commands installed to ~/.local/bin/
-│   │   └── change_version      # JDK, GraalVM, and SDK version manager
+│   │   └── change_version      # JDK version manager (Temurin default, GraalVM opt-in)
 │   └── README.md               # Java/JVM technical documentation
 │
 ├── python-dev/                 # [Environment] Python Development (uv, modern Python runtimes)
@@ -167,8 +167,8 @@ Both [`create.sh`](./create.sh), [`enter.sh`](./enter.sh), and internal `setup.s
 | Environment | Directory | Base Image | Focus | Documentation |
 | :--- | :--- | :--- | :--- | :--- |
 | **`android-dev`** | [`./android-dev/`](./android-dev/) | `fedora-toolbox:44` | Android SDK, x86_64 Emulator, AVDs, ADB, OpenJDK 21 | [View details](./android-dev/README.md) |
-| **`java-dev`** | [`./java-dev/`](./java-dev/) | `fedora-toolbox:44` | Java 21, Kotlin, SDKMAN, Gradle, Maven, GraalVM tools, Desktop GUI | [View details](./java-dev/README.md) |
-| **`python-dev`** | [`./python-dev/`](./python-dev/) | `fedora-toolbox:44` | Astral `uv`, Python 3.13/3.14, C build headers, Ruff, Mypy, Pytest | [View details](./python-dev/README.md) |
+| **`java-dev`** | [`./java-dev/`](./java-dev/) | `fedora-toolbox:44` | Java 21 LTS (Temurin), Kotlin, SDKMAN, Gradle, Maven, GraalVM-ready, Desktop GUI | [View details](./java-dev/README.md) |
+| **`python-dev`** | [`./python-dev/`](./python-dev/) | `fedora-toolbox:44` | Astral `uv`, Python 3.13 default, C build headers, Ruff, Mypy, Pytest | [View details](./python-dev/README.md) |
 | **`node-dev`** | [`./node-dev/`](./node-dev/) | `fedora-toolbox:44` | `fnm`, Node 24 LTS, pnpm, bun, React/Angular, Vitest/Playwright | [View details](./node-dev/README.md) |
 
 ---
