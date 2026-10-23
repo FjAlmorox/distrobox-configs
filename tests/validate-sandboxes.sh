@@ -67,6 +67,7 @@ HOST_SCRIPTS=(
     "$ROOT_DIR/create.sh"
     "$ROOT_DIR/enter.sh"
     "$ROOT_DIR/scripts/lib.sh"
+    "$ROOT_DIR/scripts/ensure_distrobox_env.sh"
     "$ROOT_DIR/.githooks/pre-commit"
     "$ROOT_DIR/.githooks/pre-push"
     "$ROOT_DIR/tests/validate-sandboxes.sh"
