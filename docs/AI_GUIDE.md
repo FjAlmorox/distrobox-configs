@@ -44,8 +44,8 @@ The development environment is deployed on **Fedora Linux**, using centralized s
    - **Benefit:** No code cloning, synchronization scripts, or file transfers are required between sandboxes.
 3. **Native Host Network Mapping (`--net=host`):**
    - Distrobox shares the host's network stack. Any network port opened by a service (e.g., FastAPI on `8080` in `python-dev`) is accessible immediately at `http://localhost:8080` on the host and inside `node-dev`.
-4. **Hardware Acceleration Passthrough (`/dev/dri` and `/dev/kvm`):**
-   - Enables GPU-accelerated rendering for desktop GUIs (JavaFX, Compose Desktop) and native KVM virtualization for mobile emulators (Android AVD).
+4. **Hardware Acceleration Passthrough (`/dev/dri` and `/dev/kvm`), Auto-Detected:**
+   - `create.sh` passes these devices through only when they exist on the host, enabling GPU-accelerated rendering for desktop GUIs (JavaFX, Compose Desktop) and native KVM virtualization for mobile emulators (Android AVD). On hosts without them (headless servers, cloud VMs, CI) they are skipped automatically. Override via `DISTROBOX_ADDITIONAL_FLAGS` in `.env`.
 5. **Permissions & Security:**
    - The user inside the sandbox matches the host user (same UID, GID, and username).
    - Passwordless `sudo` is configured inside containers to install Fedora system packages via `sudo dnf install -y <package>`.

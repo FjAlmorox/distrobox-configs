@@ -18,8 +18,8 @@ Each environment configured in this repository adheres to the following directiv
    This prevents tool configurations, caches, or SDKs (such as SDKMAN, Gradle, or Android SDK) from polluting or conflicting with the host system or other containers.
 2. **Shared Workspace**:
    The entire host `$HOME/Workspace` directory is bidirectionally mounted into the container at the identical absolute path, enabling seamless work across repositories without file duplication.
-3. **Hardware Acceleration (GPU & KVM)**:
-   Direct passthrough of `/dev/dri` (graphical acceleration for emulators and desktop GUIs) and `/dev/kvm` (hardware virtualization).
+3. **Hardware Acceleration (GPU & KVM), Auto-Detected**:
+   `create.sh` auto-detects `/dev/dri` (graphical acceleration for emulators and desktop GUIs) and `/dev/kvm` (hardware virtualization) and passes them through only when present on the host. On headless servers, cloud VMs, or CI (where these devices are absent) nothing is forced, so container creation stays portable. You can override detection explicitly via `DISTROBOX_ADDITIONAL_FLAGS` in `.env` (set it to an empty string to disable passthrough entirely).
 4. **Strict Boundary between Host and Container**:
    * **Root Level (Host)**: Centralized orchestration scripts (`create.sh`, `enter.sh`), declarative manifest (`distrobox.ini`), and Git configuration files (`.gitignore`, `.gitattributes`, `.editorconfig`).
    * **Subdirectory Level (Container)**: Everything belonging to that specific sandbox (`setup.sh`, `bin/`, `README.md`).

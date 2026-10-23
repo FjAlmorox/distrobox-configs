@@ -21,9 +21,14 @@ dbx_load_env "$SCRIPT_DIR"
 export FEDORA_VERSION="${FEDORA_VERSION:-44}"
 export WORKSPACE_DIR="${WORKSPACE_DIR:-$HOME/Workspace}"
 export DISTROBOX_HOMES_DIR="${DISTROBOX_HOMES_DIR:-$HOME/.local/share/distrobox-homes}"
-export DISTROBOX_ADDITIONAL_FLAGS="${DISTROBOX_ADDITIONAL_FLAGS:---device /dev/kvm --device /dev/dri}"
 export DISTROBOX_NVIDIA="${DISTROBOX_NVIDIA:-0}"
 export DISTROBOX_PULL="${DISTROBOX_PULL:-1}"
+
+# Hardware passthrough flags: respect an explicit .env value (including an empty
+# string to force none), otherwise auto-detect /dev/kvm and /dev/dri so the repo
+# works unchanged on desktops, headless servers, cloud VMs, and CI.
+export DISTROBOX_ADDITIONAL_FLAGS
+DISTROBOX_ADDITIONAL_FLAGS="$(dbx_detect_hardware_flags)"
 
 INI_FILE="$SCRIPT_DIR/distrobox.ini"
 
@@ -87,6 +92,11 @@ echo "======================================================="
 echo "  📁 Isolated Home: $BOX_HOME"
 echo "  📂 Workspace:     $WORKSPACE_DIR"
 echo "  📄 Manifest:      $INI_FILE"
+if [ -n "$DISTROBOX_ADDITIONAL_FLAGS" ]; then
+    echo "  🔌 Hardware:      $DISTROBOX_ADDITIONAL_FLAGS"
+else
+    echo "  🔌 Hardware:      none detected (headless-safe)"
+fi
 echo "======================================================="
 
 # Ensure isolated home directory exists on the host
