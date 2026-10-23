@@ -250,9 +250,57 @@ else
 fi
 
 # ---------------------------------------------------------
-# 5. Static Linting with ShellCheck
+# 5. Agent Skills Validation (.agents/skills/*/SKILL.md)
 # ---------------------------------------------------------
-echo -e "\n${BLUE}5. Static script analysis (ShellCheck)...${NC}"
+echo -e "\n${BLUE}5. Validating agent skills (Agent Skills spec)...${NC}"
+SKILLS_DIR="$ROOT_DIR/.agents/skills"
+if [ ! -d "$SKILLS_DIR" ]; then
+    info "No .agents/skills directory present; skipping skill validation."
+else
+    skill_count=0
+    while IFS= read -r -d '' skill_md; do
+        skill_count=$((skill_count + 1))
+        skill_dir="$(dirname "$skill_md")"
+        skill_dir_name="$(basename "$skill_dir")"
+        rel="${skill_md#"$ROOT_DIR/"}"
+
+        # a. Must start with a YAML frontmatter delimiter
+        if [ "$(head -n 1 "$skill_md")" != "---" ]; then
+            error "Skill '$rel' must start with a YAML frontmatter block ('---')."
+            continue
+        fi
+
+        # b. Extract the frontmatter (between the first two '---' lines)
+        frontmatter="$(awk 'NR>1 && /^---[[:space:]]*$/{exit} NR>1{print}' "$skill_md")"
+
+        # c. 'name' is required, must match the directory, and follow naming rules
+        skill_name="$(printf '%s\n' "$frontmatter" | grep -E '^name:' | head -n 1 | cut -d':' -f2- | tr -d ' ')"
+        if [ -z "$skill_name" ]; then
+            error "Skill '$rel' is missing the required 'name' frontmatter field."
+        elif [ "$skill_name" != "$skill_dir_name" ]; then
+            error "Skill 'name: $skill_name' must match its directory name '$skill_dir_name'."
+        elif ! printf '%s' "$skill_name" | grep -qE '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'; then
+            error "Skill name '$skill_name' must be lowercase alphanumeric/hyphen and not start/end with a hyphen."
+        fi
+
+        # d. 'description' is required and non-empty
+        skill_desc="$(printf '%s\n' "$frontmatter" | grep -E '^description:' | head -n 1 | cut -d':' -f2-)"
+        if [ -z "$(printf '%s' "$skill_desc" | tr -d ' ')" ]; then
+            error "Skill '$rel' is missing the required non-empty 'description' field."
+        fi
+    done < <(find "$SKILLS_DIR" -maxdepth 2 -mindepth 2 -name "SKILL.md" -print0)
+
+    if [ "$skill_count" -eq 0 ]; then
+        warn "No SKILL.md files found under .agents/skills/."
+    elif [ $ERRORS_FOUND -eq 0 ]; then
+        success "All agent skills have valid frontmatter and matching directory names."
+    fi
+fi
+
+# ---------------------------------------------------------
+# 6. Static Linting with ShellCheck
+# ---------------------------------------------------------
+echo -e "\n${BLUE}6. Static script analysis (ShellCheck)...${NC}"
 if command -v shellcheck &>/dev/null; then
     info "Found ShellCheck. Running static analysis on ${#ALL_SCRIPTS[@]} scripts..."
     for script in "${ALL_SCRIPTS[@]}"; do
@@ -274,7 +322,7 @@ else
 fi
 
 # ---------------------------------------------------------
-# 6. Final Summary & Exit
+# 7. Final Summary & Exit
 # ---------------------------------------------------------
 echo -e "\n${BLUE}======================================================${NC}"
 if [ $ERRORS_FOUND -ne 0 ]; then
