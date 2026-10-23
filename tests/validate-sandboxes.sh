@@ -66,6 +66,7 @@ echo -e "\n${BLUE}2. Validating host orchestration scripts and hooks...${NC}"
 HOST_SCRIPTS=(
     "$ROOT_DIR/create.sh"
     "$ROOT_DIR/enter.sh"
+    "$ROOT_DIR/scripts/lib.sh"
     "$ROOT_DIR/.githooks/pre-commit"
     "$ROOT_DIR/.githooks/pre-push"
     "$ROOT_DIR/tests/validate-sandboxes.sh"
@@ -214,7 +215,8 @@ if command -v shellcheck &>/dev/null; then
     info "Found ShellCheck. Running static analysis on ${#ALL_SCRIPTS[@]} scripts..."
     for script in "${ALL_SCRIPTS[@]}"; do
         rel_path="${script#"$ROOT_DIR/"}"
-        if ! shellcheck "$script"; then
+        # -x follows sourced files (e.g. scripts/lib.sh) so SC1091 is not raised.
+        if ! shellcheck -x "$script"; then
             error "ShellCheck found issues in: $rel_path"
         fi
     done

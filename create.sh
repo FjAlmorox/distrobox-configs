@@ -3,18 +3,19 @@ set -e
 
 # ==============================================================================
 # Central script to create Distrobox containers
-# Run on the HOST (Fedora).
+# Run on the HOST (Fedora), or inside a nested Distrobox (delegates to the host).
 # Usage:
 #   ./create.sh [environment-name]
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load optional local overrides from .env
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/.env"
-fi
+# Load shared helper library (environment detection, host delegation, paths)
+# shellcheck source=scripts/lib.sh
+source "$SCRIPT_DIR/scripts/lib.sh"
+
+# Load optional local overrides from .env (no assumption about repo folder name)
+dbx_load_env "$SCRIPT_DIR"
 
 # Export environment defaults for Distrobox manifest evaluation
 export FEDORA_VERSION="${FEDORA_VERSION:-44}"
@@ -31,9 +32,7 @@ if [ ! -f "$INI_FILE" ]; then
     exit 1
 fi
 
-if ! command -v distrobox >/dev/null 2>&1; then
-    echo "❌ Error: 'distrobox' is not installed or not available on host."
-    echo "   Install it with: sudo dnf install distrobox"
+if ! dbx_require_distrobox; then
     exit 1
 fi
 
@@ -94,7 +93,8 @@ echo "======================================================="
 mkdir -p "$BOX_HOME"
 
 # Create or verify container using distrobox assemble
-distrobox assemble create --file "$INI_FILE" --name "$BOX_NAME"
+# (delegates to the host automatically when run inside a nested container)
+dbx_host_distrobox assemble create --file "$INI_FILE" --name "$BOX_NAME"
 
 echo ""
 echo "======================================================="
