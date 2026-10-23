@@ -46,6 +46,7 @@ distrobox-configs/
 
 ├── .gitignore                  # Exclusions for secrets, temporary files, IDEs, and homes
 ├── AGENTS.md                   # Operational guidelines and protocol for AI Agents
+├── sandbox-versions.env        # Canonical default runtime versions (single source of truth)
 ├── LICENSE                     # MIT Open Source License
 ├── README.md                   # General documentation and environment catalog
 ├── create.sh                   # [Host] Interactive/CLI script to create sandboxes
@@ -341,9 +342,13 @@ Thanks to the centralized host architecture, adding a new environment (e.g. `pyt
    * `bin/`: *(Optional)* CLI tools copied to `$HOME/.local/bin/` (e.g. `change_version`).
    * `README.md`: Environment-specific documentation.
 3. **Link new environment** in the table of this `README.md`.
-4. **Verify and register in Git**:
+4. **Declare the default runtime version** (if the sandbox has one) in
+   [`sandbox-versions.env`](./sandbox-versions.env). This is the single source of
+   truth read by both `setup.sh` and the validator, so documentation and code
+   stay in sync automatically. Mention the same value in `<name>/README.md`.
+5. **Verify and register in Git**:
    * Run automated audit: `./tests/validate-sandboxes.sh`
-   * Add to version control: `git add <name>/ distrobox.ini README.md`
+   * Add to version control: `git add <name>/ distrobox.ini README.md sandbox-versions.env`
    * Confirm status with `git status`.
 
 > *Note: You do NOT need to create any `create.sh` or `enter.sh` scripts inside environment folders; root orchestration scripts manage any environment automatically.*

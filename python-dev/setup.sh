@@ -7,10 +7,21 @@ set -e
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE_DIR="${WORKSPACE_DIR:-${DISTROBOX_HOST_HOME:-/home/$(id -un)}/Workspace}"
 
+# Load canonical default versions (single source of truth) if present.
+# User .env overrides below still win over these canonical defaults.
+if [ -f "$REPO_ROOT/sandbox-versions.env" ]; then
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/sandbox-versions.env"
+fi
+
 # Load optional local overrides from .env if present
-if [ -f "$WORKSPACE_DIR/distrobox-configs/.env" ]; then
+if [ -f "$REPO_ROOT/.env" ]; then
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/.env"
+elif [ -f "$WORKSPACE_DIR/distrobox-configs/.env" ]; then
     # shellcheck source=/dev/null
     source "$WORKSPACE_DIR/distrobox-configs/.env"
 elif [ -f "$HOME/.env" ]; then
@@ -18,7 +29,7 @@ elif [ -f "$HOME/.env" ]; then
     source "$HOME/.env"
 fi
 
-# Configurable defaults (overridable via environment variables or .env)
+# Configurable defaults (canonical file first, then .env, then hardcoded fallback)
 PYTHON_DEFAULT_VERSION="${PYTHON_DEFAULT_VERSION:-3.13}"
 INSTALL_GUI="${INSTALL_GUI:-false}"
 INSTALL_PYTHON_DEV_TOOLS="${INSTALL_PYTHON_DEV_TOOLS:-true}"

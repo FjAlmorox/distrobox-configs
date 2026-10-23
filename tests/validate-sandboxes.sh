@@ -209,9 +209,50 @@ if [ $ERRORS_FOUND -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------
-# 4. Static Linting with ShellCheck
+# 4. Version Consistency (canonical defaults vs documentation)
 # ---------------------------------------------------------
-echo -e "\n${BLUE}4. Static script analysis (ShellCheck)...${NC}"
+echo -e "\n${BLUE}4. Checking version consistency (single source of truth)...${NC}"
+
+VERSIONS_FILE="$ROOT_DIR/sandbox-versions.env"
+# Map each canonical version variable to the sandbox README that must mention it.
+declare -A VERSION_README_MAP=(
+    ["NODE_DEFAULT_VERSION"]="node-dev/README.md"
+    ["PYTHON_DEFAULT_VERSION"]="python-dev/README.md"
+    ["JAVA_DEFAULT_VERSION"]="java-dev/README.md"
+    ["ANDROID_COMPILE_SDK"]="android-dev/README.md"
+)
+
+if [ ! -f "$VERSIONS_FILE" ]; then
+    warn "Canonical version file sandbox-versions.env not found; skipping version consistency checks."
+else
+    for var_name in "${!VERSION_README_MAP[@]}"; do
+        # Read the canonical value (strip inline comments and surrounding quotes/space)
+        canonical_value="$(grep -E "^${var_name}=" "$VERSIONS_FILE" | head -n 1 | cut -d'=' -f2- | sed 's/#.*//' | tr -d '"'"'"' ' | tr -d "'")"
+        readme_rel="${VERSION_README_MAP[$var_name]}"
+        readme_path="$ROOT_DIR/$readme_rel"
+
+        if [ -z "$canonical_value" ]; then
+            error "Canonical variable '$var_name' is missing or empty in sandbox-versions.env"
+            continue
+        fi
+        if [ ! -f "$readme_path" ]; then
+            warn "Expected documentation '$readme_rel' not found for $var_name"
+            continue
+        fi
+        if ! grep -q -- "$canonical_value" "$readme_path" 2>/dev/null; then
+            error "Documentation drift: canonical $var_name=$canonical_value is not mentioned in $readme_rel"
+        fi
+    done
+
+    if [ $ERRORS_FOUND -eq 0 ]; then
+        success "Canonical default versions are consistent with sandbox documentation."
+    fi
+fi
+
+# ---------------------------------------------------------
+# 5. Static Linting with ShellCheck
+# ---------------------------------------------------------
+echo -e "\n${BLUE}5. Static script analysis (ShellCheck)...${NC}"
 if command -v shellcheck &>/dev/null; then
     info "Found ShellCheck. Running static analysis on ${#ALL_SCRIPTS[@]} scripts..."
     for script in "${ALL_SCRIPTS[@]}"; do
@@ -233,7 +274,7 @@ else
 fi
 
 # ---------------------------------------------------------
-# 5. Final Summary & Exit
+# 6. Final Summary & Exit
 # ---------------------------------------------------------
 echo -e "\n${BLUE}======================================================${NC}"
 if [ $ERRORS_FOUND -ne 0 ]; then
