@@ -1,6 +1,8 @@
 ---
 name: version-manager
-description: Unified specification, command contract, and implementation guide for container runtime version managers (change_version).
+description: Unified specification, command contract, and implementation guide for container runtime version managers (change_version). Use when creating or modifying a sandbox's change_version CLI or reviewing its behavior.
+compatibility: Applies inside a Distrobox sandbox (bash). The implemented change_version delegates to the sandbox's native tool (fnm, uv, SDKMAN, or sdkmanager); status and local listing must work offline.
+license: MIT
 ---
 
 # 🔄 Skill: Version Manager Contract (`change_version`)
