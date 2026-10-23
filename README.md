@@ -213,6 +213,37 @@ distrobox assemble rm --file ./distrobox.ini
 
 ---
 
+## 🪆 Running From Inside Another Distrobox (Nested Delegation)
+
+`create.sh` and `enter.sh` can be run **either on the host or from inside another
+Distrobox container**. They detect their execution context automatically:
+
+* **On the host**: `distrobox` is invoked directly, as usual.
+* **Inside a nested Distrobox**: the scripts transparently delegate the
+  `distrobox` call to the host using
+  [`distrobox-host-exec`](https://github.com/89luca89/distrobox/blob/main/docs/usage/distrobox-host-exec.md)
+  (which relies on `host-spawn`), so container lifecycle operations always target
+  the host's container manager instead of failing inside the guest.
+
+Detection follows upstream Distrobox guidance: the canonical marker is the
+`$CONTAINER_ID` environment variable (set inside a distrobox), with Podman/Docker
+and Distrobox host-integration markers as additional fallbacks.
+
+```bash
+# Works the same whether you are on the host or inside another distrobox:
+./create.sh node-dev
+./enter.sh node-dev
+```
+
+> [!NOTE]
+> When nested, `distrobox-host-exec` must be available inside the current
+> container (Distrobox provides it by default). If it is missing, the scripts
+> abort with an actionable message rather than guessing. To auto-approve the
+> one-time `host-spawn` installation prompt in non-interactive contexts, export
+> `DBX_AUTO_INSTALL_HOST_SPAWN=1`.
+
+---
+
 ## 🛠️ General Distrobox Commands
 
 ### Container Lifecycle

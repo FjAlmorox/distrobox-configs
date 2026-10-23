@@ -83,6 +83,15 @@ AI agents must execute commands using `bash -lc` to guarantee that the container
 distrobox enter <container-name> -- bash -lc "<commands>"
 ```
 
+### Nested Execution (Running Inside Another Distrobox):
+`create.sh` and `enter.sh` auto-detect whether they run on the host or inside a
+nested Distrobox. When nested, they delegate `distrobox` calls to the host via
+`distrobox-host-exec` (host-spawn). Detection uses the canonical `$CONTAINER_ID`
+marker first, then Podman/Docker and Distrobox host-integration markers. Agents
+can therefore invoke these scripts from within a development container without
+special handling; set `DBX_AUTO_INSTALL_HOST_SPAWN=1` to auto-approve the
+one-time `host-spawn` install prompt in non-interactive runs.
+
 ---
 
 ## 4. Unified Version Manager (`change_version`)
