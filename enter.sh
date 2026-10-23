@@ -3,24 +3,24 @@ set -e
 
 # ==============================================================================
 # Central script to enter Distrobox containers
-# Run on the HOST (Fedora).
+# Run on the HOST (Fedora), or inside a nested Distrobox (delegates to the host).
 # Usage:
 #   ./enter.sh [environment-name]
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load optional local overrides from .env
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/.env"
-fi
+# Load shared helper library (environment detection, host delegation, paths)
+# shellcheck source=scripts/lib.sh
+source "$SCRIPT_DIR/scripts/lib.sh"
+
+# Load optional local overrides from .env (no assumption about repo folder name)
+dbx_load_env "$SCRIPT_DIR"
 
 WORKSPACE_DIR="${WORKSPACE_DIR:-$HOME/Workspace}"
 INI_FILE="$SCRIPT_DIR/distrobox.ini"
 
-if ! command -v distrobox >/dev/null 2>&1; then
-    echo "❌ Error: 'distrobox' is not installed or not available on host."
+if ! dbx_require_distrobox; then
     exit 1
 fi
 
@@ -67,4 +67,5 @@ if [ "$FOUND" = false ]; then
 fi
 
 # Enter container and navigate directly to the Workspace
-exec distrobox enter "$BOX_NAME" -- bash -c "cd '$WORKSPACE_DIR' && exec bash"
+# (delegates to the host automatically when run inside a nested container)
+dbx_exec_host_distrobox enter "$BOX_NAME" -- bash -c "cd '$WORKSPACE_DIR' && exec bash"

@@ -21,7 +21,7 @@
 
 ## ✅ Definition of Done (DoD) Checklist
 
-- [ ] **Distrobox Declaration**: Declared in [`distrobox.ini`](./distrobox.ini) with isolated home, workspace mount, and hardware passthrough (`/dev/kvm`, `/dev/dri`).
+- [ ] **Distrobox Declaration**: Declared in [`distrobox.ini`](./distrobox.ini) with isolated home, workspace mount, and auto-detected hardware passthrough (`/dev/kvm`, `/dev/dri` passed through only when present; overridable via `DISTROBOX_ADDITIONAL_FLAGS`).
 - [ ] **No Root Script Duplication**: No duplicate `create.sh` or `enter.sh` exists inside the subfolder.
 - [ ] **CLI Commands**: All user CLI commands reside in `<name>/bin/` without `.sh` extension and have `chmod +x` permissions (`mode 100755`).
 - [ ] **Idempotent Provisioning**: `setup.sh` is 100% unattended and copies `bin/*` into `$HOME/.local/bin/`.

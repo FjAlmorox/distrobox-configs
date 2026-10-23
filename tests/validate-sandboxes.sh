@@ -66,6 +66,8 @@ echo -e "\n${BLUE}2. Validating host orchestration scripts and hooks...${NC}"
 HOST_SCRIPTS=(
     "$ROOT_DIR/create.sh"
     "$ROOT_DIR/enter.sh"
+    "$ROOT_DIR/scripts/lib.sh"
+    "$ROOT_DIR/scripts/ensure_distrobox_env.sh"
     "$ROOT_DIR/.githooks/pre-commit"
     "$ROOT_DIR/.githooks/pre-push"
     "$ROOT_DIR/tests/validate-sandboxes.sh"
@@ -207,14 +209,104 @@ if [ $ERRORS_FOUND -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------
-# 5. Static Linting with ShellCheck
+# 4. Version Consistency (canonical defaults vs documentation)
 # ---------------------------------------------------------
-echo -e "\n${BLUE}5. Static script analysis (ShellCheck)...${NC}"
+echo -e "\n${BLUE}4. Checking version consistency (single source of truth)...${NC}"
+
+VERSIONS_FILE="$ROOT_DIR/sandbox-versions.env"
+# Map each canonical version variable to the sandbox README that must mention it.
+declare -A VERSION_README_MAP=(
+    ["NODE_DEFAULT_VERSION"]="node-dev/README.md"
+    ["PYTHON_DEFAULT_VERSION"]="python-dev/README.md"
+    ["JAVA_DEFAULT_VERSION"]="java-dev/README.md"
+    ["ANDROID_COMPILE_SDK"]="android-dev/README.md"
+)
+
+if [ ! -f "$VERSIONS_FILE" ]; then
+    warn "Canonical version file sandbox-versions.env not found; skipping version consistency checks."
+else
+    for var_name in "${!VERSION_README_MAP[@]}"; do
+        # Read the canonical value (strip inline comments and surrounding quotes/space)
+        canonical_value="$(grep -E "^${var_name}=" "$VERSIONS_FILE" | head -n 1 | cut -d'=' -f2- | sed 's/#.*//' | tr -d '"'"'"' ' | tr -d "'")"
+        readme_rel="${VERSION_README_MAP[$var_name]}"
+        readme_path="$ROOT_DIR/$readme_rel"
+
+        if [ -z "$canonical_value" ]; then
+            error "Canonical variable '$var_name' is missing or empty in sandbox-versions.env"
+            continue
+        fi
+        if [ ! -f "$readme_path" ]; then
+            warn "Expected documentation '$readme_rel' not found for $var_name"
+            continue
+        fi
+        if ! grep -q -- "$canonical_value" "$readme_path" 2>/dev/null; then
+            error "Documentation drift: canonical $var_name=$canonical_value is not mentioned in $readme_rel"
+        fi
+    done
+
+    if [ $ERRORS_FOUND -eq 0 ]; then
+        success "Canonical default versions are consistent with sandbox documentation."
+    fi
+fi
+
+# ---------------------------------------------------------
+# 5. Agent Skills Validation (.agents/skills/*/SKILL.md)
+# ---------------------------------------------------------
+echo -e "\n${BLUE}5. Validating agent skills (Agent Skills spec)...${NC}"
+SKILLS_DIR="$ROOT_DIR/.agents/skills"
+if [ ! -d "$SKILLS_DIR" ]; then
+    info "No .agents/skills directory present; skipping skill validation."
+else
+    skill_count=0
+    while IFS= read -r -d '' skill_md; do
+        skill_count=$((skill_count + 1))
+        skill_dir="$(dirname "$skill_md")"
+        skill_dir_name="$(basename "$skill_dir")"
+        rel="${skill_md#"$ROOT_DIR/"}"
+
+        # a. Must start with a YAML frontmatter delimiter
+        if [ "$(head -n 1 "$skill_md")" != "---" ]; then
+            error "Skill '$rel' must start with a YAML frontmatter block ('---')."
+            continue
+        fi
+
+        # b. Extract the frontmatter (between the first two '---' lines)
+        frontmatter="$(awk 'NR>1 && /^---[[:space:]]*$/{exit} NR>1{print}' "$skill_md")"
+
+        # c. 'name' is required, must match the directory, and follow naming rules
+        skill_name="$(printf '%s\n' "$frontmatter" | grep -E '^name:' | head -n 1 | cut -d':' -f2- | tr -d ' ')"
+        if [ -z "$skill_name" ]; then
+            error "Skill '$rel' is missing the required 'name' frontmatter field."
+        elif [ "$skill_name" != "$skill_dir_name" ]; then
+            error "Skill 'name: $skill_name' must match its directory name '$skill_dir_name'."
+        elif ! printf '%s' "$skill_name" | grep -qE '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'; then
+            error "Skill name '$skill_name' must be lowercase alphanumeric/hyphen and not start/end with a hyphen."
+        fi
+
+        # d. 'description' is required and non-empty
+        skill_desc="$(printf '%s\n' "$frontmatter" | grep -E '^description:' | head -n 1 | cut -d':' -f2-)"
+        if [ -z "$(printf '%s' "$skill_desc" | tr -d ' ')" ]; then
+            error "Skill '$rel' is missing the required non-empty 'description' field."
+        fi
+    done < <(find "$SKILLS_DIR" -maxdepth 2 -mindepth 2 -name "SKILL.md" -print0)
+
+    if [ "$skill_count" -eq 0 ]; then
+        warn "No SKILL.md files found under .agents/skills/."
+    elif [ $ERRORS_FOUND -eq 0 ]; then
+        success "All agent skills have valid frontmatter and matching directory names."
+    fi
+fi
+
+# ---------------------------------------------------------
+# 6. Static Linting with ShellCheck
+# ---------------------------------------------------------
+echo -e "\n${BLUE}6. Static script analysis (ShellCheck)...${NC}"
 if command -v shellcheck &>/dev/null; then
     info "Found ShellCheck. Running static analysis on ${#ALL_SCRIPTS[@]} scripts..."
     for script in "${ALL_SCRIPTS[@]}"; do
         rel_path="${script#"$ROOT_DIR/"}"
-        if ! shellcheck "$script"; then
+        # -x follows sourced files (e.g. scripts/lib.sh) so SC1091 is not raised.
+        if ! shellcheck -x "$script"; then
             error "ShellCheck found issues in: $rel_path"
         fi
     done
@@ -230,7 +322,7 @@ else
 fi
 
 # ---------------------------------------------------------
-# 6. Final Summary & Exit
+# 7. Final Summary & Exit
 # ---------------------------------------------------------
 echo -e "\n${BLUE}======================================================${NC}"
 if [ $ERRORS_FOUND -ne 0 ]; then

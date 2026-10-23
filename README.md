@@ -18,8 +18,8 @@ Each environment configured in this repository adheres to the following directiv
    This prevents tool configurations, caches, or SDKs (such as SDKMAN, Gradle, or Android SDK) from polluting or conflicting with the host system or other containers.
 2. **Shared Workspace**:
    The entire host `$HOME/Workspace` directory is bidirectionally mounted into the container at the identical absolute path, enabling seamless work across repositories without file duplication.
-3. **Hardware Acceleration (GPU & KVM)**:
-   Direct passthrough of `/dev/dri` (graphical acceleration for emulators and desktop GUIs) and `/dev/kvm` (hardware virtualization).
+3. **Hardware Acceleration (GPU & KVM), Auto-Detected**:
+   `create.sh` auto-detects `/dev/dri` (graphical acceleration for emulators and desktop GUIs) and `/dev/kvm` (hardware virtualization) and passes them through only when present on the host. On headless servers, cloud VMs, or CI (where these devices are absent) nothing is forced, so container creation stays portable. You can override detection explicitly via `DISTROBOX_ADDITIONAL_FLAGS` in `.env` (set it to an empty string to disable passthrough entirely).
 4. **Strict Boundary between Host and Container**:
    * **Root Level (Host)**: Centralized orchestration scripts (`create.sh`, `enter.sh`), declarative manifest (`distrobox.ini`), and Git configuration files (`.gitignore`, `.gitattributes`, `.editorconfig`).
    * **Subdirectory Level (Container)**: Everything belonging to that specific sandbox (`setup.sh`, `bin/`, `README.md`).
@@ -46,6 +46,7 @@ distrobox-configs/
 
 ├── .gitignore                  # Exclusions for secrets, temporary files, IDEs, and homes
 ├── AGENTS.md                   # Operational guidelines and protocol for AI Agents
+├── sandbox-versions.env        # Canonical default runtime versions (single source of truth)
 ├── LICENSE                     # MIT Open Source License
 ├── README.md                   # General documentation and environment catalog
 ├── create.sh                   # [Host] Interactive/CLI script to create sandboxes
@@ -61,7 +62,7 @@ distrobox-configs/
 ├── java-dev/                   # [Environment] Java / Kotlin / JVM Development
 │   ├── setup.sh                # Internal bootstrap (run once inside sandbox)
 │   ├── bin/                    # CLI commands installed to ~/.local/bin/
-│   │   └── change_version      # JDK, GraalVM, and SDK version manager
+│   │   └── change_version      # JDK version manager (Temurin default, GraalVM opt-in)
 │   └── README.md               # Java/JVM technical documentation
 │
 ├── python-dev/                 # [Environment] Python Development (uv, modern Python runtimes)
@@ -167,8 +168,8 @@ Both [`create.sh`](./create.sh), [`enter.sh`](./enter.sh), and internal `setup.s
 | Environment | Directory | Base Image | Focus | Documentation |
 | :--- | :--- | :--- | :--- | :--- |
 | **`android-dev`** | [`./android-dev/`](./android-dev/) | `fedora-toolbox:44` | Android SDK, x86_64 Emulator, AVDs, ADB, OpenJDK 21 | [View details](./android-dev/README.md) |
-| **`java-dev`** | [`./java-dev/`](./java-dev/) | `fedora-toolbox:44` | Java 21, Kotlin, SDKMAN, Gradle, Maven, GraalVM tools, Desktop GUI | [View details](./java-dev/README.md) |
-| **`python-dev`** | [`./python-dev/`](./python-dev/) | `fedora-toolbox:44` | Astral `uv`, Python 3.13/3.14, C build headers, Ruff, Mypy, Pytest | [View details](./python-dev/README.md) |
+| **`java-dev`** | [`./java-dev/`](./java-dev/) | `fedora-toolbox:44` | Java 21 LTS (Temurin), Kotlin, SDKMAN, Gradle, Maven, GraalVM-ready, Desktop GUI | [View details](./java-dev/README.md) |
+| **`python-dev`** | [`./python-dev/`](./python-dev/) | `fedora-toolbox:44` | Astral `uv`, Python 3.13 default, C build headers, Ruff, Mypy, Pytest | [View details](./python-dev/README.md) |
 | **`node-dev`** | [`./node-dev/`](./node-dev/) | `fedora-toolbox:44` | `fnm`, Node 24 LTS, pnpm, bun, React/Angular, Vitest/Playwright | [View details](./node-dev/README.md) |
 
 ---
@@ -210,6 +211,37 @@ distrobox assemble create --file ./distrobox.ini
 # Remove all containers
 distrobox assemble rm --file ./distrobox.ini
 ```
+
+---
+
+## 🪆 Running From Inside Another Distrobox (Nested Delegation)
+
+`create.sh` and `enter.sh` can be run **either on the host or from inside another
+Distrobox container**. They detect their execution context automatically:
+
+* **On the host**: `distrobox` is invoked directly, as usual.
+* **Inside a nested Distrobox**: the scripts transparently delegate the
+  `distrobox` call to the host using
+  [`distrobox-host-exec`](https://github.com/89luca89/distrobox/blob/main/docs/usage/distrobox-host-exec.md)
+  (which relies on `host-spawn`), so container lifecycle operations always target
+  the host's container manager instead of failing inside the guest.
+
+Detection follows upstream Distrobox guidance: the canonical marker is the
+`$CONTAINER_ID` environment variable (set inside a distrobox), with Podman/Docker
+and Distrobox host-integration markers as additional fallbacks.
+
+```bash
+# Works the same whether you are on the host or inside another distrobox:
+./create.sh node-dev
+./enter.sh node-dev
+```
+
+> [!NOTE]
+> When nested, `distrobox-host-exec` must be available inside the current
+> container (Distrobox provides it by default). If it is missing, the scripts
+> abort with an actionable message rather than guessing. To auto-approve the
+> one-time `host-spawn` installation prompt in non-interactive contexts, export
+> `DBX_AUTO_INSTALL_HOST_SPAWN=1`.
 
 ---
 
@@ -310,9 +342,13 @@ Thanks to the centralized host architecture, adding a new environment (e.g. `pyt
    * `bin/`: *(Optional)* CLI tools copied to `$HOME/.local/bin/` (e.g. `change_version`).
    * `README.md`: Environment-specific documentation.
 3. **Link new environment** in the table of this `README.md`.
-4. **Verify and register in Git**:
+4. **Declare the default runtime version** (if the sandbox has one) in
+   [`sandbox-versions.env`](./sandbox-versions.env). This is the single source of
+   truth read by both `setup.sh` and the validator, so documentation and code
+   stay in sync automatically. Mention the same value in `<name>/README.md`.
+5. **Verify and register in Git**:
    * Run automated audit: `./tests/validate-sandboxes.sh`
-   * Add to version control: `git add <name>/ distrobox.ini README.md`
+   * Add to version control: `git add <name>/ distrobox.ini README.md sandbox-versions.env`
    * Confirm status with `git status`.
 
 > *Note: You do NOT need to create any `create.sh` or `enter.sh` scripts inside environment folders; root orchestration scripts manage any environment automatically.*

@@ -25,6 +25,8 @@ Thumbs.db
 *.env
 .env.*
 !.env.example
+# Canonical version manifest is version-controlled (not a secret-bearing .env)
+!sandbox-versions.env
 *.pem
 *.key
 *.keystore

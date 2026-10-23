@@ -1,6 +1,8 @@
 ---
 name: create-sandbox
-description: Comprehensive 7-phase protocol and runbook for creating, provisioning, verifying, and integrating new containerized development environments in this repository.
+description: Comprehensive 7-phase protocol and runbook for creating, provisioning, verifying, and integrating new containerized development environments in this repository. Use when asked to design, build, add, or integrate a new Distrobox sandbox.
+compatibility: Requires a Fedora Linux host with Distrobox and Podman installed, the git CLI, and network access to fetch upstream version information and packages. Shell commands assume bash.
+license: MIT
 ---
 
 # 📦 Skill: Create Sandbox Environment
@@ -58,12 +60,17 @@ Add the new container section to [`distrobox.ini`](../../distrobox.ini) complyin
 image="${DISTROBOX_BASE_IMAGE:-registry.fedoraproject.org/fedora-toolbox:${FEDORA_VERSION:-44}}"
 home="${DISTROBOX_HOMES_DIR:-${HOME}/.local/share/distrobox-homes}/<name>"
 volume="${WORKSPACE_DIR:-${HOME}/Workspace}:${WORKSPACE_DIR:-${HOME}/Workspace}:rw"
-additional_flags="${DISTROBOX_ADDITIONAL_FLAGS:---device /dev/kvm --device /dev/dri}"
+additional_flags="${DISTROBOX_ADDITIONAL_FLAGS:-}"
 init=false
 nvidia=${DISTROBOX_NVIDIA:-0}
 pull=${DISTROBOX_PULL:-1}
 root=false
 ```
+
+> Hardware passthrough (`/dev/kvm`, `/dev/dri`) is **auto-detected** by `create.sh`
+> (`dbx_detect_hardware_flags` in `scripts/lib.sh`) and passed through only when
+> present on the host, so leave `additional_flags` defaulting to empty. Users can
+> still force a value via `DISTROBOX_ADDITIONAL_FLAGS` in `.env`.
 
 ---
 
@@ -79,8 +86,8 @@ Generate the modular subfolder structure:
 ```
 
 #### 1. `setup.sh` Requirements
-* **Container check**: Verify execution inside container (`/run/host/container-manager` or `CONTAINER_ID`).
-* **Local `.env` loading**: Check for and source `$WORKSPACE_DIR/distrobox-configs/.env` if present.
+* **Container check**: Verify execution inside container (`$CONTAINER_ID`, `/run/host/container-manager`, or `/.dockerenv`).
+* **Canonical version loading**: Source `$REPO_ROOT/sandbox-versions.env` first (single source of truth), then the user `.env` (which overrides it), then apply a hardcoded `${VAR:-default}` fallback. Derive `$REPO_ROOT` from the script's real path; never assume the repository folder name.
 * **Package installation**: Use `sudo dnf install -y --skip-unavailable ...` (fallback to `apt-get` if Debian/Ubuntu).
 * **Conditional GUI / Emulator Pattern (Unified Standard)**:
   If the environment supports desktop interfaces (JavaFX, Qt, GTK), emulators, or multimedia:
@@ -115,6 +122,10 @@ Generate the modular subfolder structure:
 
 ### Phase 5: Global Catalog & Template Registration
 * Register the new container in the *Available Environments* table, directory layout, and command sections of the root [`README.md`](../../README.md).
+* If the sandbox has a default runtime version, declare it in
+  [`sandbox-versions.env`](../../sandbox-versions.env) (the single source of truth)
+  and mention the same value in `<name>/README.md`. The validator enforces that
+  these stay consistent.
 * If new environment variables are introduced, document them in [`.env.example`](../../.env.example).
 
 ---

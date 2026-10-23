@@ -7,10 +7,21 @@ set -e
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE_DIR="${WORKSPACE_DIR:-${DISTROBOX_HOST_HOME:-/home/$(id -un)}/Workspace}"
 
+# Load canonical default versions (single source of truth) if present.
+# User .env overrides below still win over these canonical defaults.
+if [ -f "$REPO_ROOT/sandbox-versions.env" ]; then
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/sandbox-versions.env"
+fi
+
 # Load optional local overrides from .env if present
-if [ -f "$WORKSPACE_DIR/distrobox-configs/.env" ]; then
+if [ -f "$REPO_ROOT/.env" ]; then
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/.env"
+elif [ -f "$WORKSPACE_DIR/distrobox-configs/.env" ]; then
     # shellcheck source=/dev/null
     source "$WORKSPACE_DIR/distrobox-configs/.env"
 elif [ -f "$HOME/.env" ]; then
@@ -18,7 +29,7 @@ elif [ -f "$HOME/.env" ]; then
     source "$HOME/.env"
 fi
 
-# Configurable defaults (overridable via environment variables or .env)
+# Configurable defaults (canonical file first, then .env, then hardcoded fallback)
 JAVA_DEFAULT_VERSION="${JAVA_DEFAULT_VERSION:-21}"
 INSTALL_GUI="${INSTALL_GUI:-true}"
 INSTALL_GRADLE="${INSTALL_GRADLE:-true}"
@@ -49,7 +60,7 @@ if [ ! -f /run/host/container-manager ] && [ -z "$CONTAINER_ID" ] && [ ! -f /.do
     fi
 fi
 
-# 2. Install system packages (utilities, GraalVM toolchain, and optional GUI/fonts)
+# 2. Install system packages (utilities, native-image build deps, and optional GUI/fonts)
 echo ""
 echo "📦 [1/6] Installing system dependencies (Base toolchain)..."
 BASE_PACKAGES_FEDORA="curl wget zip unzip tar sed git which file jq findutils pciutils procps-ng gcc gcc-c++ glibc-devel zlib-devel libstdc++-devel"

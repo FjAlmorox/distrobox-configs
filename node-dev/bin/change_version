@@ -122,7 +122,7 @@ list_remote() {
     echo "Curated Long-Term Support (LTS) & Stable Releases:"
     echo "  • 24          -> Active LTS (Recommended for standard development)"
     echo "  • 22          -> Maintenance LTS (Enterprise / legacy compatibility)"
-    echo "  • 26          -> Current release (Latest JavaScript & V8 features)"
+    echo "  • 26          -> Latest LTS line (newest JavaScript & V8 features)"
     echo ""
     echo "💡 You can install and switch with: change_version set <version>"
     echo "   Or install without switching:    change_version install <version>"
